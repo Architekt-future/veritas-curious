@@ -367,6 +367,33 @@ input[type=range]::-webkit-slider-thumb {
 }
 .synthesis-insights li::before { content: '· '; }
 
+.interpretation {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-family: var(--serif);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    font-style: italic;
+}
+.interpretation-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-style: normal;
+}
+.interpretation-loading {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    animation: blink 1s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
 .results-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -571,6 +598,10 @@ footer {
                 <div class="synthesis-verdict" id="synthesisVerdict"></div>
                 <div class="synthesis-future" id="synthesisFuture"></div>
                 <ul class="synthesis-insights" id="synthesisInsights"></ul>
+            <div class="interpretation" id="interpretationBlock" style="display:none">
+                <div class="interpretation-label" id="interpretationLabel">інтерпретація · haiku</div>
+                <div id="interpretationText"></div>
+            </div>
             </div>
             <div class="results-grid">
                 <div class="result-panel">
@@ -786,6 +817,7 @@ async function runCurious() {
                 text,
                 steps: parseInt(document.getElementById('curiousSteps').value),
                 use_field: document.getElementById('curiousUseField').checked,
+                lang: _lang,
             }),
         });
         if (!resp.ok) throw new Error((await resp.json()).error || `HTTP ${resp.status}`);
@@ -830,6 +862,19 @@ function renderCuriousResults(data) {
             <span class="result-value">${typeof fs.entropy==='number'?fs.entropy.toFixed(2):'—'}</span></div>`;
     } else {
         fPanel.innerHTML = `<div style="color:var(--muted);font-size:11px">${data.errors?.foresight||'недоступний'}</div>`;
+    }
+
+    // Interpretation from Haiku
+    const interp = data.interpretation || '';
+    const interpBlock = document.getElementById('interpretationBlock');
+    const interpLabel = document.getElementById('interpretationLabel');
+    const interpText = document.getElementById('interpretationText');
+    if (interp) {
+        interpLabel.textContent = _lang === 'uk' ? 'інтерпретація · haiku' : 'interpretation · haiku';
+        interpText.textContent = interp;
+        interpBlock.style.display = 'block';
+    } else {
+        interpBlock.style.display = 'none';
     }
 
     document.getElementById('curiousResults').style.display = 'block';
