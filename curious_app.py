@@ -50,6 +50,12 @@ def _get(url: str, timeout: int = TIMEOUT) -> dict:
         return json.loads(resp.read().decode())
 
 
+# ── Frontend ──────────────────────────────────────────────────────────────────
+@app.route('/')
+def index():
+    return open('curious_index.html', encoding='utf-8').read()
+
+
 # ── Health ─────────────────────────────────────────────────────────────────────
 @app.route('/api/health')
 def health():
