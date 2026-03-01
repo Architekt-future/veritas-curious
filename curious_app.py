@@ -308,33 +308,33 @@ def _haiku_interpret(text: str, synthesis: dict, lang: str = 'uk') -> str:
     insights = synthesis.get('insights', [])
 
     if lang == 'uk':
-        prompt = f"""Ти аналітик системи Veritas Curious — епістемологічної інфраструктури для орієнтації в реальності.
+        prompt = f"""Ти пояснювач результатів системи Veritas Curious.
 
-Проаналізовано текст:
-"{text[:400]}"
+ВАЖЛИВО: Твоя задача — пояснити що ВИМІРЯЛА система, а не робити власні висновки.
+Не додавай власний аналіз маніпуляцій якщо Свідок їх не знайшов.
+Не використовуй markdown. Без заголовків. Просто текст 3-4 речення.
 
-Результати аналізу:
-- Вердикт синтезу: {verdict}
-- Домінантне майбутнє: {dominant}
-- Insights: {'; '.join(insights)}
+Що виміряла система:
+- Свідок: {insights[0] if insights else 'немає даних'}
+- Foresight домінантне майбутнє: {dominant}
+- Загальний вердикт: {verdict}
 
-Напиши коротку людськомовну інтерпретацію (3-5 речень) українською мовою.
-Поясни простими словами: що означає цей вердикт, чому текст резонує саме з цим майбутнім, і що це говорить про поточний стан інформаційного поля.
-Без технічного жаргону. Без заголовків. Тільки текст."""
+Поясни просто: що означає цей вердикт і чому саме ці ключові слова тексту резонують з майбутнім "{dominant}".
+Говори про вимірювання системи — не про зміст тексту."""
     else:
-        prompt = f"""You are an analyst for Veritas Curious — an epistemic infrastructure for navigating reality.
+        prompt = f"""You are an explainer for Veritas Curious system results.
 
-Analyzed text:
-"{text[:400]}"
+IMPORTANT: Your task is to explain what the system MEASURED, not to add your own analysis.
+Do not identify manipulation if Witness did not find it.
+No markdown. No headers. Plain text, 3-4 sentences only.
 
-Analysis results:
+What the system measured:
+- Witness: {insights[0] if insights else 'no data'}
+- Foresight dominant future: {dominant}
 - Synthesis verdict: {verdict}
-- Dominant future: {dominant}
-- Insights: {'; '.join(insights)}
 
-Write a brief human-readable interpretation (3-5 sentences) in English.
-Explain in plain language: what this verdict means, why the text resonates with this particular future, and what it says about the current state of the information field.
-No technical jargon. No headers. Plain text only."""
+Explain simply: what this verdict means and why the keywords in this text resonate with the future "{dominant}".
+Talk about the system measurements — not about the content itself."""
 
     try:
         payload = {
