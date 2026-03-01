@@ -253,13 +253,27 @@ def _synthesize(witness: dict, foresight: dict) -> dict:
 
     # Witness signals
     if witness:
-        w_verdict = witness.get('verdict') or witness.get('preservation_verdict', '')
-        w_score = witness.get('score', witness.get('preservation_score', 0))
-        clean_verdicts = ('CLEAN', 'STRUCTURAL_INTEGRITY', 'STRUCTURAL_INTEGRITY ')
+        # Protocol returns various field names — check all
+        w_verdict = (
+            witness.get('verdict') or
+            witness.get('preservation_verdict') or
+            witness.get('status') or ''
+        ).strip()
+        w_score = float(
+            witness.get('score') or
+            witness.get('preservation_score') or
+            witness.get('manipulation_score') or 0
+        )
 
-        if w_verdict and w_verdict.strip() not in clean_verdicts:
+        # Clean verdicts — score 0.00 means CLEAN in Protocol
+        # High score (>0.3) means manipulation detected
+        is_clean = w_score < 0.3 or w_verdict.upper() in (
+            'CLEAN', 'STRUCTURAL_INTEGRITY', 'OK', ''
+        )
+
+        if not is_clean:
             is_manipulative = True
-            insights.append(f'Witness: {w_verdict.strip()} (score {w_score:.2f})')
+            insights.append(f'Witness: {w_verdict} (score {w_score:.2f})')
         else:
             insights.append(f'Witness: структурна цілісність (score {w_score:.2f})')
 
@@ -315,7 +329,7 @@ def _haiku_interpret(text: str, synthesis: dict, lang: str = 'uk') -> str:
 Не використовуй markdown. Без заголовків. Просто текст 3-4 речення.
 
 Що виміряла система:
-- Свідок: {insights[0] if insights else 'немає даних'}
+- Свідок: {insights[0] if insights else 'немає даних'} (score 0.00 = чисто, score >0.3 = маніпуляція)
 - Foresight домінантне майбутнє: {dominant}
 - Загальний вердикт: {verdict}
 
