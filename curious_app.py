@@ -202,11 +202,16 @@ def curious():
         # 3. Synthesize
         synthesis = _synthesize(witness_result, foresight_result)
 
+        # 4. Haiku interpretation (non-blocking — skip if slow)
+        lang = data.get('lang', 'uk')
+        interpretation = _haiku_interpret(text, synthesis, lang=lang)
+
         return jsonify({
             'text': text,
             'witness': witness_result,
             'foresight': foresight_result,
             'synthesis': synthesis,
+            'interpretation': interpretation,
             'errors': {
                 k: v for k, v in {
                     'witness': witness_error,
@@ -219,27 +224,44 @@ def curious():
         return jsonify({'error': str(e)}), 500
 
 
+DARK_FUTURES = {
+    'Nuclear-Escalation', 'AI-Control-Instrument',
+    'Control-Consolidation', 'Russia-Collapse', 'Climate-Tipping',
+}
+LIGHT_FUTURES = {
+    'Ukraine-Victory', 'Green-Symbiosis',
+    'Resilient-Adaptation', 'Post-Scarcity',
+}
+
+
 def _synthesize(witness: dict, foresight: dict) -> dict:
     """
     Build synthesis from witness + foresight results.
-    Returns a unified verdict and key insights.
+
+    Logic:
+        MANIPULATIVE_NARRATIVE — witness found manipulation (regardless of foresight)
+        DARK_ATTRACTOR         — text is clean but resonates with dangerous futures
+        CONSTRUCTIVE_ATTRACTOR — text resonates with positive futures
+        NEUTRAL_SIGNAL         — clean text, uncertain or neutral future
     """
     if not witness and not foresight:
-        return {'verdict': 'NO_DATA', 'insight': 'Both services unavailable.'}
+        return {'verdict': 'NO_DATA', 'dominant_future': None, 'insights': []}
 
-    verdict_parts = []
     insights = []
+    dominant = ''
+    is_manipulative = False
 
     # Witness signals
     if witness:
         w_verdict = witness.get('verdict') or witness.get('preservation_verdict', '')
         w_score = witness.get('score', witness.get('preservation_score', 0))
+        clean_verdicts = ('CLEAN', 'STRUCTURAL_INTEGRITY', 'STRUCTURAL_INTEGRITY ')
 
-        if w_verdict and w_verdict not in ('CLEAN', 'STRUCTURAL_INTEGRITY'):
-            verdict_parts.append('MANIPULATIVE')
-            insights.append(f'Witness: {w_verdict} (score {w_score:.2f})')
+        if w_verdict and w_verdict.strip() not in clean_verdicts:
+            is_manipulative = True
+            insights.append(f'Witness: {w_verdict.strip()} (score {w_score:.2f})')
         else:
-            verdict_parts.append('CLEAN')
+            insights.append(f'Witness: структурна цілісність (score {w_score:.2f})')
 
     # Foresight signals
     if foresight:
@@ -248,28 +270,95 @@ def _synthesize(witness: dict, foresight: dict) -> dict:
         entropy = fs.get('entropy', 0)
 
         if dominant:
-            insights.append(f'Resonates with: {dominant}')
+            insights.append(f'Резонує з: {dominant}')
 
-        if entropy < 0.3:
-            insights.append('Field strongly converged — high certainty trajectory')
-        elif entropy > 0.7:
-            insights.append('Field highly uncertain — multiple futures equally possible')
+        if entropy < 0.5:
+            insights.append('Поле конвергує — траєкторія визначена')
+        elif entropy > 1.5:
+            insights.append('Висока невизначеність — багато рівноймовірних майбутніх')
 
-    # Combined verdict
-    if 'MANIPULATIVE' in verdict_parts:
+    # Combined verdict — witness takes priority
+    if is_manipulative:
         combined = 'MANIPULATIVE_NARRATIVE'
-    elif dominant in ('Nuclear-Escalation', 'AI-Control-Instrument', 'Control-Consolidation'):
+    elif dominant in DARK_FUTURES:
         combined = 'DARK_ATTRACTOR'
-    elif dominant in ('Ukraine-Victory', 'Green-Symbiosis', 'Resilient-Adaptation'):
+    elif dominant in LIGHT_FUTURES:
         combined = 'CONSTRUCTIVE_ATTRACTOR'
     else:
         combined = 'NEUTRAL_SIGNAL'
 
     return {
         'verdict': combined,
-        'dominant_future': dominant if foresight else None,
+        'dominant_future': dominant or None,
         'insights': insights,
     }
+
+
+def _haiku_interpret(text: str, synthesis: dict, lang: str = 'uk') -> str:
+    """
+    Use Claude Haiku to generate human-readable interpretation of the synthesis.
+    Returns plain text explanation. Falls back to empty string on error.
+    """
+    api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+    if not api_key:
+        return ''
+
+    verdict = synthesis.get('verdict', '')
+    dominant = synthesis.get('dominant_future', '')
+    insights = synthesis.get('insights', [])
+
+    if lang == 'uk':
+        prompt = f"""Ти аналітик системи Veritas Curious — епістемологічної інфраструктури для орієнтації в реальності.
+
+Проаналізовано текст:
+"{text[:400]}"
+
+Результати аналізу:
+- Вердикт синтезу: {verdict}
+- Домінантне майбутнє: {dominant}
+- Insights: {'; '.join(insights)}
+
+Напиши коротку людськомовну інтерпретацію (3-5 речень) українською мовою.
+Поясни простими словами: що означає цей вердикт, чому текст резонує саме з цим майбутнім, і що це говорить про поточний стан інформаційного поля.
+Без технічного жаргону. Без заголовків. Тільки текст."""
+    else:
+        prompt = f"""You are an analyst for Veritas Curious — an epistemic infrastructure for navigating reality.
+
+Analyzed text:
+"{text[:400]}"
+
+Analysis results:
+- Synthesis verdict: {verdict}
+- Dominant future: {dominant}
+- Insights: {'; '.join(insights)}
+
+Write a brief human-readable interpretation (3-5 sentences) in English.
+Explain in plain language: what this verdict means, why the text resonates with this particular future, and what it says about the current state of the information field.
+No technical jargon. No headers. Plain text only."""
+
+    try:
+        payload = {
+            'model': 'claude-haiku-4-5-20251001',
+            'max_tokens': 400,
+            'messages': [{'role': 'user', 'content': prompt}]
+        }
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(
+            'https://api.anthropic.com/v1/messages',
+            data=data,
+            headers={
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json',
+            },
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            result = json.loads(resp.read().decode())
+            return result['content'][0]['text'].strip()
+    except Exception as e:
+        print(f'[curious] haiku interpret error: {e}')
+        return 
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
