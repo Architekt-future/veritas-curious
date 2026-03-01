@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Veritas Curious · Епістемологічна інфраструктура</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg:       #090c12;
+    --surface:  #0e1420;
+    --border:   #1a2236;
+    --dim:      #253047;
+    --muted:    #5a6a8a;
+    --text:     #c8d4e8;
+    --bright:   #e8f0ff;
+    --mono:     'Share Tech Mono', monospace;
+    --serif:    'Courier Prime', monospace;
+    --witness:  #3b82f6;
+    --foresight:#a78bfa;
+    --curious:  #34d399;
+    --dark:     #ef4444;
+    --neutral:  #f59e0b;
+    --light:    #34d399;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.lang-switch {
+    position: fixed;
+    top: 16px;
+    right: 20px;
+    display: flex;
+    gap: 4px;
+    z-index: 100;
+}
+.lang-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.lang-btn.active { color: var(--bright); border-color: var(--dim); }
+.lang-btn:hover { color: var(--text); }
+
+header {
+    padding: 48px 40px 32px;
+    border-bottom: 1px solid var(--border);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-family: var(--serif);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.logo span { color: var(--curious); }
+
+h1 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    color: var(--bright);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 16px;
+}
+h1 em { font-style: italic; color: var(--curious); }
+
+.tagline {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.ecosystem-links {
+    margin-top: 20px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+.eco-link {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.eco-link.witness  { color: var(--witness); }
+.eco-link.foresight{ color: var(--foresight); }
+.eco-link.github   { color: var(--muted); }
+.eco-link:hover    { opacity: 0.7; }
+.eco-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.eco-dot.witness   { background: var(--witness); }
+.eco-dot.foresight { background: var(--foresight); }
+
+.service-status {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+.service-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+.service-pill-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--dim);
+}
+.service-pill-dot.ok    { background: var(--light); }
+.service-pill-dot.error { background: var(--dark); }
+.service-pill-dot.loading { background: var(--neutral); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.mode-nav {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+}
+.mode-tab {
+    padding: 16px 24px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.mode-tab:hover { color: var(--text); }
+.mode-tab.active.curious-tab   { color: var(--curious);   border-color: var(--curious); }
+.mode-tab.active.witness-tab   { color: var(--witness);   border-color: var(--witness); }
+.mode-tab.active.foresight-tab { color: var(--foresight); border-color: var(--foresight); }
+
+.tab-dot { width: 6px; height: 6px; border-radius: 50%; }
+.curious-dot   { background: var(--curious); }
+.witness-dot   { background: var(--witness); }
+.foresight-dot { background: var(--foresight); }
+
+main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+}
+
+.mode-panel { display: none; }
+.mode-panel.active { display: block; }
+
+.input-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+
+textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 16px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+    min-height: 120px;
+}
+textarea:focus { border-color: var(--dim); }
+textarea::placeholder { color: var(--muted); font-style: italic; }
+
+.controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 10px 20px;
+    border: 1px solid;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.btn-curious   { color: var(--curious);   border-color: var(--curious); }
+.btn-curious:hover   { background: rgba(52,211,153,0.08); }
+.btn-witness   { color: var(--witness);   border-color: var(--witness); }
+.btn-witness:hover   { background: rgba(59,130,246,0.08); }
+.btn-foresight { color: var(--foresight); border-color: var(--foresight); }
+.btn-foresight:hover { background: rgba(167,139,250,0.08); }
+.btn-clear { color: var(--muted); border-color: transparent; font-size: 10px; }
+.btn-clear:hover { color: var(--text); }
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--muted);
+}
+.toggle {
+    position: relative;
+    width: 32px;
+    height: 18px;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--dim);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.toggle input:checked + .toggle-track { background: var(--curious); }
+.toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    left: 3px; top: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.2s;
+}
+.toggle input:checked + .toggle-track::after { left: 17px; }
+
+.slider-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--muted);
+}
+input[type=range] {
+    -webkit-appearance: none;
+    width: 80px;
+    height: 2px;
+    background: var(--dim);
+    outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--curious);
+    cursor: pointer;
+}
+
+.loading {
+    display: none;
+    padding: 20px 0;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+}
+.loading.show { display: flex; align-items: center; gap: 12px; }
+.spinner {
+    width: 16px; height: 16px;
+    border: 1px solid var(--dim);
+    border-top-color: var(--curious);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-msg { display: none; font-size: 11px; color: var(--dark); padding: 8px 0; }
+.error-msg.show { display: block; }
+
+.results { margin-top: 32px; }
+
+.synthesis-card {
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+}
+.synthesis-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+}
+.synthesis-card.MANIPULATIVE_NARRATIVE::before { background: var(--dark); }
+.synthesis-card.DARK_ATTRACTOR::before         { background: var(--neutral); }
+.synthesis-card.CONSTRUCTIVE_ATTRACTOR::before { background: var(--light); }
+.synthesis-card.NEUTRAL_SIGNAL::before         { background: var(--muted); }
+
+.synthesis-verdict {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.synthesis-verdict.MANIPULATIVE_NARRATIVE { color: var(--dark); }
+.synthesis-verdict.DARK_ATTRACTOR         { color: var(--neutral); }
+.synthesis-verdict.CONSTRUCTIVE_ATTRACTOR { color: var(--light); }
+.synthesis-verdict.NEUTRAL_SIGNAL         { color: var(--muted); }
+
+.synthesis-future {
+    font-family: var(--serif);
+    font-size: 20px;
+    color: var(--bright);
+    margin-bottom: 12px;
+}
+.synthesis-insights {
+    list-style: none;
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+}
+.synthesis-insights li::before { content: '· '; }
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+}
+@media (max-width: 600px) { .results-grid { grid-template-columns: 1fr; } }
+
+.result-panel { border: 1px solid var(--border); padding: 20px; }
+.result-panel-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.result-panel-label.witness-label   { color: var(--witness); }
+.result-panel-label.foresight-label { color: var(--foresight); }
+
+.result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 11px;
+}
+.result-key   { color: var(--muted); }
+.result-value { color: var(--bright); text-align: right; font-size: 12px; }
+
+.witness-verdict-box { border: 1px solid var(--border); padding: 24px; margin-bottom: 16px; }
+.verdict-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+.verdict-value { font-family: var(--serif); font-size: 22px; font-weight: 700; }
+.verdict-CLEAN            { color: var(--light); }
+.verdict-MANIPULATION     { color: var(--dark); }
+.verdict-AUTHORITY_HIJACK { color: var(--dark); }
+.verdict-UNKNOWN          { color: var(--muted); }
+
+.score-bar-wrap { margin-top: 16px; font-size: 10px; color: var(--muted); }
+.score-bar { height: 3px; background: var(--dim); margin-top: 6px; }
+.score-fill { height: 100%; background: var(--witness); transition: width 0.5s; }
+
+.triggers-list { margin-top: 16px; font-size: 10px; }
+.triggers-list-label {
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-size: 9px;
+    margin-bottom: 8px;
+}
+.trigger-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+}
+.trigger-cluster { color: var(--dark); font-size: 9px; letter-spacing: 0.1em; }
+
+.foresight-dominant {
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+    text-align: center;
+}
+.foresight-dominant-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--foresight);
+    margin-bottom: 8px;
+}
+.foresight-dominant-name { font-family: var(--serif); font-size: 24px; color: var(--bright); margin-bottom: 4px; }
+.foresight-entropy { font-size: 10px; color: var(--muted); }
+
+.foresight-futures-list { border: 1px solid var(--border); overflow: hidden; }
+.future-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+}
+.future-row:last-child { border-bottom: none; }
+.future-row.dominant { background: rgba(167,139,250,0.05); }
+.future-name { flex: 1; color: var(--text); }
+.future-name.dominant-name { color: var(--foresight); }
+.future-bar-wrap { width: 100px; }
+.future-bar { height: 2px; background: var(--dim); }
+.future-bar-fill { height: 100%; background: var(--foresight); opacity: 0.6; transition: width 0.4s; }
+.future-row.dominant .future-bar-fill { opacity: 1; }
+.future-pct { width: 40px; text-align: right; color: var(--muted); font-size: 10px; }
+
+footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.footer-left { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
+.footer-left span { color: var(--curious); }
+.footer-links { display: flex; gap: 16px; }
+.footer-link { font-size: 10px; color: var(--muted); text-decoration: none; letter-spacing: 0.1em; transition: color 0.2s; }
+.footer-link:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<div class="lang-switch">
+    <button class="lang-btn active" onclick="setLang('uk')">UA</button>
+    <button class="lang-btn" onclick="setLang('en')">EN</button>
+</div>
+
+<header>
+    <div class="logo">Veritas Protocol · <span>Curious</span></div>
+    <h1>Верифікація.<br><em>Резонанс.</em><br>Синтез.</h1>
+    <div class="tagline" id="tagline">епістемологічна інфраструктура · не передбачає · досліджує</div>
+
+    <div class="service-status">
+        <div class="service-pill">
+            <div class="service-pill-dot loading" id="dotProtocol"></div>
+            <span>witness</span>
+        </div>
+        <div class="service-pill">
+            <div class="service-pill-dot loading" id="dotForesight"></div>
+            <span>foresight</span>
+        </div>
+    </div>
+
+    <div class="ecosystem-links">
+        <a class="eco-link witness" href="https://github.com/Architekt-future/veritas-protocol" target="_blank">
+            <div class="eco-dot witness"></div>Veritas Protocol
+        </a>
+        <a class="eco-link foresight" href="https://github.com/Architekt-future/veritas-foresight" target="_blank">
+            <div class="eco-dot foresight"></div>Veritas Foresight
+        </a>
+        <a class="eco-link github" href="https://github.com/Architekt-future/veritas-curious" target="_blank">
+            GitHub
+        </a>
+    </div>
+</header>
+
+<nav class="mode-nav">
+    <button class="mode-tab curious-tab active" onclick="switchMode('curious')" id="tabCurious">
+        <div class="tab-dot curious-dot"></div>
+        <span id="tabCuriousLabel">Curious</span>
+    </button>
+    <button class="mode-tab witness-tab" onclick="switchMode('witness')" id="tabWitness">
+        <div class="tab-dot witness-dot"></div>
+        <span id="tabWitnessLabel">Свідок</span>
+    </button>
+    <button class="mode-tab foresight-tab" onclick="switchMode('foresight')" id="tabForesight">
+        <div class="tab-dot foresight-dot"></div>
+        <span id="tabForesightLabel">Foresight</span>
+    </button>
+</nav>
+
+<main>
+
+    <!-- CURIOUS -->
+    <div class="mode-panel active" id="panelCurious">
+        <div class="input-label" id="curiousInputLabel">текст · твердження · наратив · заголовок</div>
+        <textarea id="curiousText" rows="5"
+            placeholder="Введіть будь-який текст — стаття, твердження, заголовок, маніфест. Curious верифікує його через Свідка і вимірює резонанс через Foresight."></textarea>
+        <div class="controls">
+            <button class="btn btn-curious" onclick="runCurious()">⚡ <span id="btnCuriousLabel">дослідити</span></button>
+            <button class="btn btn-clear" onclick="clearCurious()">✕ <span id="btnClearCuriousLabel">очистити</span></button>
+            <div class="control-group">
+                <label class="toggle">
+                    <input type="checkbox" id="curiousUseField" checked>
+                    <div class="toggle-track"></div>
+                </label>
+                <label for="curiousUseField" id="curiousFieldLabel">живе поле</label>
+            </div>
+            <div class="slider-wrap">
+                <span id="curiousStepsLabel">кроки</span>
+                <input type="range" id="curiousSteps" min="3" max="10" value="5"
+                    oninput="document.getElementById('curiousStepsVal').textContent=this.value">
+                <span id="curiousStepsVal">5</span>
+            </div>
+        </div>
+        <div class="loading" id="curiousLoading">
+            <div class="spinner"></div>
+            <span id="curiousLoadingLabel">свідок аналізує · foresight симулює · синтез будується</span>
+        </div>
+        <div class="error-msg" id="curiousError"></div>
+        <div class="results" id="curiousResults" style="display:none">
+            <div class="synthesis-card" id="synthesisCard">
+                <div class="synthesis-verdict" id="synthesisVerdict"></div>
+                <div class="synthesis-future" id="synthesisFuture"></div>
+                <ul class="synthesis-insights" id="synthesisInsights"></ul>
+            </div>
+            <div class="results-grid">
+                <div class="result-panel">
+                    <div class="result-panel-label witness-label">👁 Свідок</div>
+                    <div id="curiousWitnessContent"></div>
+                </div>
+                <div class="result-panel">
+                    <div class="result-panel-label foresight-label">🔭 Foresight</div>
+                    <div id="curiousForesightContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WITNESS -->
+    <div class="mode-panel" id="panelWitness">
+        <div class="input-label" id="witnessInputLabel">текст для верифікації</div>
+        <textarea id="witnessText" rows="6"
+            placeholder="Вставте текст — стаття, пост, твердження. Свідок перевірить на маніпуляцію, підміну авторитету, емоційний тиск."></textarea>
+        <div class="controls">
+            <button class="btn btn-witness" onclick="runWitness()">👁 <span id="btnWitnessLabel">верифікувати</span></button>
+            <button class="btn btn-clear" onclick="clearWitness()">✕ <span id="btnClearWitnessLabel">очистити</span></button>
+        </div>
+        <div class="loading" id="witnessLoading">
+            <div class="spinner" style="border-top-color:var(--witness)"></div>
+            <span id="witnessLoadingLabel">свідок аналізує</span>
+        </div>
+        <div class="error-msg" id="witnessError"></div>
+        <div class="results" id="witnessResults" style="display:none">
+            <div class="witness-verdict-box">
+                <div class="verdict-label" id="witnessVerdictLabel">вердикт</div>
+                <div class="verdict-value" id="witnessVerdict"></div>
+            </div>
+            <div id="witnessDetails"></div>
+        </div>
+    </div>
+
+    <!-- FORESIGHT -->
+    <div class="mode-panel" id="panelForesight">
+        <div class="input-label" id="foresightInputLabel">аргумент · наратив · гіпотеза</div>
+        <textarea id="foresightText" rows="4"
+            placeholder="Ваш аргумент — твердження, наратив, гіпотеза. Foresight вимірює резонанс з можливими майбутніми."></textarea>
+        <div class="controls">
+            <button class="btn btn-foresight" onclick="runForesight()">🔭 <span id="btnForesightLabel">симулювати</span></button>
+            <button class="btn btn-clear" onclick="clearForesight()">✕ <span id="btnClearForesightLabel">очистити</span></button>
+            <div class="control-group">
+                <label class="toggle">
+                    <input type="checkbox" id="foresightUseField" checked>
+                    <div class="toggle-track"></div>
+                </label>
+                <label for="foresightUseField" id="foresightFieldLabel">живе поле</label>
+            </div>
+            <div class="slider-wrap">
+                <span id="foresightStepsLabel">кроки</span>
+                <input type="range" id="foresightSteps" min="3" max="10" value="5"
+                    oninput="document.getElementById('foresightStepsVal').textContent=this.value">
+                <span id="foresightStepsVal">5</span>
+            </div>
+        </div>
+        <div class="loading" id="foresightLoading">
+            <div class="spinner" style="border-top-color:var(--foresight)"></div>
+            <span id="foresightLoadingLabel">foresight симулює резонанс</span>
+        </div>
+        <div class="error-msg" id="foresightError"></div>
+        <div class="results" id="foresightResults" style="display:none">
+            <div class="foresight-dominant">
+                <div class="foresight-dominant-label" id="foresightDominantLabel">домінантне майбутнє</div>
+                <div class="foresight-dominant-name" id="foresightDominantName"></div>
+                <div class="foresight-entropy" id="foresightEntropyVal"></div>
+            </div>
+            <div class="foresight-futures-list" id="foresightFuturesList"></div>
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-left">Veritas Curious v1.0 · <span>допитливість як метод</span></div>
+    <div class="footer-links">
+        <a class="footer-link" href="https://veritas-protocol.onrender.com" target="_blank">Свідок</a>
+        <a class="footer-link" href="https://veritas-foresight.onrender.com" target="_blank">Foresight</a>
+        <a class="footer-link" href="https://github.com/Architekt-future/veritas-curious" target="_blank">GitHub</a>
+    </div>
+</footer>
+
+<script>
+const API = '';
+
+const I18N = {
+    uk: {
+        tagline: 'епістемологічна інфраструктура · не передбачає · досліджує',
+        tabCurious: 'Curious', tabWitness: 'Свідок', tabForesight: 'Foresight',
+        curiousInputLabel: 'текст · твердження · наратив · заголовок',
+        curiousPlaceholder: 'Введіть будь-який текст — стаття, твердження, заголовок, маніфест. Curious верифікує його через Свідка і вимірює резонанс через Foresight.',
+        btnCurious: 'дослідити', btnClearCurious: 'очистити',
+        curiousFieldLabel: 'живе поле', curiousStepsLabel: 'кроки',
+        curiousLoadingLabel: 'свідок аналізує · foresight симулює · синтез будується',
+        witnessInputLabel: 'текст для верифікації',
+        witnessPlaceholder: 'Вставте текст — стаття, пост, твердження. Свідок перевірить на маніпуляцію.',
+        btnWitness: 'верифікувати', btnClearWitness: 'очистити',
+        witnessLoadingLabel: 'свідок аналізує', witnessVerdictLabel: 'вердикт',
+        foresightInputLabel: 'аргумент · наратив · гіпотеза',
+        foresightPlaceholder: 'Ваш аргумент — твердження, наратив, гіпотеза.',
+        btnForesight: 'симулювати', btnClearForesight: 'очистити',
+        foresightFieldLabel: 'живе поле', foresightStepsLabel: 'кроки',
+        foresightLoadingLabel: 'foresight симулює резонанс',
+        foresightDominantLabel: 'домінантне майбутнє',
+        entropyHigh: 'висока невизначеність', entropyLow: 'поле конвергує',
+        verdicts: {
+            MANIPULATIVE_NARRATIVE: 'маніпулятивний наратив',
+            DARK_ATTRACTOR: 'темний атрактор',
+            CONSTRUCTIVE_ATTRACTOR: 'конструктивний атрактор',
+            NEUTRAL_SIGNAL: 'нейтральний сигнал',
+            NO_DATA: 'немає даних',
+        }
+    },
+    en: {
+        tagline: 'epistemic infrastructure · does not predict · investigates',
+        tabCurious: 'Curious', tabWitness: 'Witness', tabForesight: 'Foresight',
+        curiousInputLabel: 'text · claim · narrative · headline',
+        curiousPlaceholder: 'Enter any text — article, claim, headline, manifesto. Curious verifies it through Witness and measures resonance through Foresight.',
+        btnCurious: 'investigate', btnClearCurious: 'clear',
+        curiousFieldLabel: 'live field', curiousStepsLabel: 'steps',
+        curiousLoadingLabel: 'witness analyzing · foresight simulating · synthesis building',
+        witnessInputLabel: 'text to verify',
+        witnessPlaceholder: 'Paste text — article, post, claim. Witness checks for manipulation.',
+        btnWitness: 'verify', btnClearWitness: 'clear',
+        witnessLoadingLabel: 'witness analyzing', witnessVerdictLabel: 'verdict',
+        foresightInputLabel: 'argument · narrative · hypothesis',
+        foresightPlaceholder: 'Your argument — a claim, narrative, hypothesis.',
+        btnForesight: 'simulate', btnClearForesight: 'clear',
+        foresightFieldLabel: 'live field', foresightStepsLabel: 'steps',
+        foresightLoadingLabel: 'foresight simulating resonance',
+        foresightDominantLabel: 'dominant future',
+        entropyHigh: 'high uncertainty', entropyLow: 'field converging',
+        verdicts: {
+            MANIPULATIVE_NARRATIVE: 'manipulative narrative',
+            DARK_ATTRACTOR: 'dark attractor',
+            CONSTRUCTIVE_ATTRACTOR: 'constructive attractor',
+            NEUTRAL_SIGNAL: 'neutral signal',
+            NO_DATA: 'no data',
+        }
+    }
+};
+
+let _lang = 'uk', _t = I18N.uk;
+
+function setLang(lang) {
+    _lang = lang; _t = I18N[lang];
+    document.querySelectorAll('.lang-btn').forEach(b =>
+        b.classList.toggle('active', b.textContent.trim().toLowerCase() === lang));
+    const ids = {
+        tagline:'tagline', tabCuriousLabel:'tabCurious', tabWitnessLabel:'tabWitness',
+        tabForesightLabel:'tabForesight', curiousInputLabel:'curiousInputLabel',
+        btnCuriousLabel:'btnCurious', btnClearCuriousLabel:'btnClearCurious',
+        curiousFieldLabel:'curiousFieldLabel', curiousStepsLabel:'curiousStepsLabel',
+        curiousLoadingLabel:'curiousLoadingLabel', witnessInputLabel:'witnessInputLabel',
+        btnWitnessLabel:'btnWitness', btnClearWitnessLabel:'btnClearWitness',
+        witnessLoadingLabel:'witnessLoadingLabel', witnessVerdictLabel:'witnessVerdictLabel',
+        foresightInputLabel:'foresightInputLabel', btnForesightLabel:'btnForesight',
+        btnClearForesightLabel:'btnClearForesight', foresightFieldLabel:'foresightFieldLabel',
+        foresightStepsLabel:'foresightStepsLabel', foresightLoadingLabel:'foresightLoadingLabel',
+        foresightDominantLabel:'foresightDominantLabel',
+    };
+    Object.entries(ids).forEach(([elId, key]) => {
+        const el = document.getElementById(elId);
+        if (el) el.textContent = _t[key] || '';
+    });
+    document.getElementById('curiousText').placeholder = _t.curiousPlaceholder;
+    document.getElementById('witnessText').placeholder = _t.witnessPlaceholder;
+    document.getElementById('foresightText').placeholder = _t.foresightPlaceholder;
+}
+
+function switchMode(mode) {
+    ['curious','witness','foresight'].forEach(m => {
+        const cap = m.charAt(0).toUpperCase()+m.slice(1);
+        document.getElementById('tab'+cap).classList.toggle('active', m===mode);
+        document.getElementById('panel'+cap).classList.toggle('active', m===mode);
+    });
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function setLoading(id, show) { document.getElementById(id).classList.toggle('show', show); }
+function showError(id, msg) { const e=document.getElementById(id); e.textContent=msg; e.classList.add('show'); }
+function hideError(id) { document.getElementById(id).classList.remove('show'); }
+
+async function checkHealth() {
+    try {
+        const data = await (await fetch(`${API}/api/health`)).json();
+        const s = data.services || {};
+        document.getElementById('dotProtocol').className  = 'service-pill-dot '+(s.protocol==='ok'?'ok':'error');
+        document.getElementById('dotForesight').className = 'service-pill-dot '+(s.foresight==='ok'?'ok':'error');
+    } catch(e) {
+        ['dotProtocol','dotForesight'].forEach(id =>
+            document.getElementById(id).className = 'service-pill-dot error');
+    }
+}
+
+// ── CURIOUS ────────────────────────────────────────────────────────────────────
+async function runCurious() {
+    const text = document.getElementById('curiousText').value.trim();
+    if (!text) return;
+    hideError('curiousError');
+    document.getElementById('curiousResults').style.display = 'none';
+    setLoading('curiousLoading', true);
+    try {
+        const resp = await fetch(`${API}/api/curious`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                text,
+                steps: parseInt(document.getElementById('curiousSteps').value),
+                use_field: document.getElementById('curiousUseField').checked,
+            }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).error || `HTTP ${resp.status}`);
+        renderCuriousResults(await resp.json());
+    } catch(e) { showError('curiousError', e.message); }
+    finally { setLoading('curiousLoading', false); }
+}
+
+function renderCuriousResults(data) {
+    const syn = data.synthesis || {};
+    const card = document.getElementById('synthesisCard');
+    card.className = `synthesis-card ${syn.verdict||'NEUTRAL_SIGNAL'}`;
+    const vEl = document.getElementById('synthesisVerdict');
+    vEl.className = `synthesis-verdict ${syn.verdict||''}`;
+    vEl.textContent = _t.verdicts[syn.verdict] || syn.verdict || '';
+    document.getElementById('synthesisFuture').textContent = syn.dominant_future || '';
+    document.getElementById('synthesisInsights').innerHTML =
+        (syn.insights||[]).map(i=>`<li>${esc(i)}</li>`).join('');
+
+    const w = data.witness || {};
+    const wPanel = document.getElementById('curiousWitnessContent');
+    if (w && !data.errors?.witness) {
+        const verdict = w.verdict || w.preservation_verdict || 'UNKNOWN';
+        const score = w.score ?? w.preservation_score ?? 0;
+        wPanel.innerHTML = `
+            <div class="result-row"><span class="result-key">вердикт</span>
+            <span class="result-value verdict-${verdict}">${esc(verdict)}</span></div>
+            <div class="result-row"><span class="result-key">score</span>
+            <span class="result-value">${typeof score==='number'?score.toFixed(2):score}</span></div>`;
+    } else {
+        wPanel.innerHTML = `<div style="color:var(--muted);font-size:11px">${data.errors?.witness||'недоступний'}</div>`;
+    }
+
+    const f = data.foresight || {};
+    const fs = f.final_state || {};
+    const fPanel = document.getElementById('curiousForesightContent');
+    if (f && !data.errors?.foresight) {
+        fPanel.innerHTML = `
+            <div class="result-row"><span class="result-key">домінантне</span>
+            <span class="result-value" style="color:var(--foresight)">${esc(fs.dominant||'—')}</span></div>
+            <div class="result-row"><span class="result-key">ентропія</span>
+            <span class="result-value">${typeof fs.entropy==='number'?fs.entropy.toFixed(2):'—'}</span></div>`;
+    } else {
+        fPanel.innerHTML = `<div style="color:var(--muted);font-size:11px">${data.errors?.foresight||'недоступний'}</div>`;
+    }
+
+    document.getElementById('curiousResults').style.display = 'block';
+}
+
+function clearCurious() {
+    document.getElementById('curiousText').value = '';
+    document.getElementById('curiousResults').style.display = 'none';
+    hideError('curiousError');
+}
+
+// ── WITNESS ────────────────────────────────────────────────────────────────────
+async function runWitness() {
+    const text = document.getElementById('witnessText').value.trim();
+    if (!text) return;
+    hideError('witnessError');
+    document.getElementById('witnessResults').style.display = 'none';
+    setLoading('witnessLoading', true);
+    try {
+        const resp = await fetch(`${API}/api/witness`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({text}),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).error || `HTTP ${resp.status}`);
+        renderWitnessResults(await resp.json());
+    } catch(e) { showError('witnessError', e.message); }
+    finally { setLoading('witnessLoading', false); }
+}
+
+function renderWitnessResults(data) {
+    const verdict = data.verdict || data.preservation_verdict || 'UNKNOWN';
+    const score = data.score ?? data.preservation_score ?? 0;
+    const vEl = document.getElementById('witnessVerdict');
+    vEl.className = `verdict-value verdict-${verdict}`;
+    vEl.textContent = verdict;
+    const details = document.getElementById('witnessDetails');
+    details.innerHTML = `
+        <div class="score-bar-wrap">
+            <div style="display:flex;justify-content:space-between">
+                <span>score</span><span>${typeof score==='number'?score.toFixed(2):score}</span>
+            </div>
+            <div class="score-bar">
+                <div class="score-fill" style="width:${Math.min(100,(score||0)*100)}%"></div>
+            </div>
+        </div>`;
+    const triggers = data.triggers || data.detected_patterns || [];
+    if (triggers.length > 0) {
+        details.innerHTML += `
+            <div class="triggers-list" style="margin-top:16px">
+                <div class="triggers-list-label">виявлені патерни</div>
+                ${triggers.map(t=>`
+                    <div class="trigger-item">
+                        <span>${esc(t.pattern||t.name||t)}</span>
+                        <span class="trigger-cluster">${esc(t.cluster||'')}</span>
+                    </div>`).join('')}
+            </div>`;
+    }
+    document.getElementById('witnessResults').style.display = 'block';
+}
+
+function clearWitness() {
+    document.getElementById('witnessText').value = '';
+    document.getElementById('witnessResults').style.display = 'none';
+    hideError('witnessError');
+}
+
+// ── FORESIGHT ──────────────────────────────────────────────────────────────────
+async function runForesight() {
+    const text = document.getElementById('foresightText').value.trim();
+    if (!text) return;
+    hideError('foresightError');
+    document.getElementById('foresightResults').style.display = 'none';
+    setLoading('foresightLoading', true);
+    try {
+        const resp = await fetch(`${API}/api/foresight/simulate`, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+                argument: text,
+                steps: parseInt(document.getElementById('foresightSteps').value),
+                use_field: document.getElementById('foresightUseField').checked,
+            }),
+        });
+        if (!resp.ok) throw new Error((await resp.json()).error || `HTTP ${resp.status}`);
+        renderForesightResults(await resp.json());
+    } catch(e) { showError('foresightError', e.message); }
+    finally { setLoading('foresightLoading', false); }
+}
+
+function renderForesightResults(data) {
+    const fs = data.final_state || {};
+    const dominant = fs.dominant || '—';
+    const entropy = typeof fs.entropy==='number' ? fs.entropy : 0;
+    document.getElementById('foresightDominantName').textContent = dominant;
+    document.getElementById('foresightEntropyVal').textContent =
+        `entropy ${entropy.toFixed(2)} · ${entropy>0.6?_t.entropyHigh:_t.entropyLow}`;
+    document.getElementById('foresightFuturesList').innerHTML =
+        (fs.futures||[]).map(f=>`
+            <div class="future-row ${f.name===dominant?'dominant':''}">
+                <div class="future-name ${f.name===dominant?'dominant-name':''}">${esc(f.name)}</div>
+                <div class="future-bar-wrap">
+                    <div class="future-bar">
+                        <div class="future-bar-fill" style="width:${f.probability_pct||0}%"></div>
+                    </div>
+                </div>
+                <div class="future-pct">${(f.probability_pct||0).toFixed(1)}%</div>
+            </div>`).join('');
+    document.getElementById('foresightResults').style.display = 'block';
+}
+
+function clearForesight() {
+    document.getElementById('foresightText').value = '';
+    document.getElementById('foresightResults').style.display = 'none';
+    hideError('foresightError');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+checkHealth();
+</script>
+</body>
+</html>
